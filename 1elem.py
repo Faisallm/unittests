@@ -2,9 +2,11 @@ from abaqus import *
 from abaqusConstants import *
 import regionToolset  #type:ignore
 
+# blank out the current viewport
 session.viewports["Viewport: 1"].setValues(displayedObject=None)
 
 # renaming the default model
+# 1: name we want to name our model
 mdb.models.changeKey(fromName="Model-1", toName="SingleElementModel")
 myModel = mdb.models['SingleElementModel']
 
@@ -13,29 +15,38 @@ import sketch  #type:ignore
 import part
 
 cubePart = myModel.Part(
+    # internal variables(_): we will be adding (_) to the  
     name="SingleElementCube",
     dimensionality=THREE_D,
     type=DEFORMABLE_BODY
 )
 # creating a sketchpad
 cubeSketch = myModel.ConstrainedSketch(
+    # internal variable
     name="cubeSketch",
+    # doesn't really matter, since we are not viewing it
     sheetSize=2.0
 )
 
+# 2: dimensions of the model, # default values available
+# x1:1, x2:1, y1:1, y2:1, z:1
 cubeSketch.rectangle(
     point1=(0.0, 0.0),
     point2=(1.0, 1.0)
 )
 
 # this creates a feature object by calling the BaseShell() method.
+# 1 x 1 x 1
 cubePart.BaseSolidExtrude(sketch=cubeSketch, depth=1.0)
 
-import material
+import material  # type: ignore
 
 cubeMaterial = myModel.Material(
+    # 3) name of our material
     name="AISI 1005 Steel"
 )
+
+# 4, density, modulus, poisson ratio
 cubeMaterial.Density(table=((7872, ), ))
 cubeMaterial.Elastic(table=((200E9, 0.29), ))
 
@@ -44,7 +55,9 @@ cubeMaterial.Elastic(table=((200E9, 0.29), ))
 # HomogeneousShellSection object
 # (we don't need to create this, maybe!)
 plateSection = myModel.HomogeneousSolidSection(
+    # internal variable (_): this should take the model name and add + '_section:str' to it
     name='cubeSection',
+    # this would reference the material name in str
     material="AISI 1005 Steel"
 )
 
@@ -56,11 +69,12 @@ cubePart.SectionAssignment(
 )
 
 # create an assembly
-import assembly
+import assembly  # type: ignore
 
 cubeAssembly = myModel.rootAssembly
 cubeAssembly.regenerate()  # recommended for stability
 cubeInstance = cubeAssembly.Instance(
+    # internal variable (_): we will add + '_Instance' to model name
     name="cubeInstance",
     part=cubePart,
     dependent=ON
@@ -69,9 +83,12 @@ cubeInstance = cubeAssembly.Instance(
 
 # create step
 myModel.StaticStep(
+    # internal variable: to be defined as 'displacement step'
     name="Displacement Step",
     previous="Initial",
+    # internal variable: to be defined as: 'Apply controlled displacement in this step'
     description="Apply controlled displacement in this step",
+    # default values, can be modified by users
     nlgeom=OFF,
     initialInc=0.1,
     maxInc=0.1,
