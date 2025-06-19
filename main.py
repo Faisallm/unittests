@@ -22,6 +22,8 @@ current_working_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 os.chdir(current_working_dir)
 # we going to create a logging module to print the current file path to, using decorators!
 
+print(f"Running with __name__ = {__name__}")
+print(f"Arguments: {sys.argv}")
 
 
 class Unittest(object):
@@ -63,6 +65,7 @@ class Unittest(object):
                 mesh_deviation_factor: float = 0.1
                 ):
         
+        
         # user provided variables, some are optional or have default values.
 
         self.model_name: str = model_name
@@ -102,268 +105,268 @@ class Unittest(object):
         self._odb_name = self.model_name = '.odb'  # odb file extension
         self._sheet_size: float = 2.0
 
-            # extrude the depth, the 3D component
-        def _mesh_type_selector(self):
-            '''
-                This internal function allows us to choose a suitable mesh type from abaqus
-            '''
-            mesh_type = None
-            if self.mesh_type == 'C3D8R':
-                mesh_type = C3D8R  # type: ignore
-            else:
-                # raise an error and and to logger file
-                raise ValueError(f'Incorrect mesh type.\nCheck mesh_type parameter.')
-            return mesh_type
+    # extrude the depth, the 3D component
+    def _mesh_type_selector(self):
+        '''
+            This internal function allows us to choose a suitable mesh type from abaqus
+        '''
+        mesh_type = None
+        if self.mesh_type == 'C3D8R':
+            mesh_type = C3D8R  # type: ignore
+        else:
+            # raise an error and and to logger file
+            raise ValueError(f'Incorrect mesh type.\nCheck mesh_type parameter.')
+        return mesh_type
 
-        # create the model
-        def _create_model(self) -> object:
-            """This internal function creates a model in abaqus."""
+    # create the model
+    def _create_model(self) -> object:
+        """This internal function creates a model in abaqus."""
 
-            mdb.models.changeKey(fromName='Model-1', toName=self.model_name)  # type: ignore
-            myModel = mdb.models[self.model_name]  # type: ignore
-            return myModel
+        mdb.models.changeKey(fromName='Model-1', toName=self.model_name)  # type: ignore
+        myModel = mdb.models[self.model_name]  # type: ignore
+        return myModel
+    
+    # create the part
+    def _create_part(self, myModel: object) -> object:
+        """
+            This internal function creates the part and the sketch.
+        """
+        myPart = myModel.Part(
+            name=self._part_name,
+            dimensionality=THREE_D,  # type: ignore
+            type=DEFORMABLE_BODY  # type: ignore
+        )
+        mySketch = myModel.ConstrainedSketch(
+            name=self._sketch_name,
+            sheetSize=self._sheet_size
+        ) 
+        mySketch.rectangle(
+            # x1, y1, x2, y2
+            point1=tuple(self.geom_coords[:2]),
+            point2=tuple(self.geom_coords[2:4]) 
+        )
+        myPart.BaseSolidExtrude(sketch=mySketch, depth=self.geom_coords[4])
+
+        return myPart
+    
+    # define material properties
+    # the Any type is their because my lazy ass don't know the return type
+    def _define_material(self, myModel: object) -> Any:
+        """This internal defines the material properties in our model"""
+
+        myMaterial = myModel.Material(
+            name=self.material_name,
+        )
+        myMaterial.Density(table=((self.density), ))
+        myMaterial.Elastic(table=((self.modulus, self.poisson_ratio)))
+        return myMaterial
+    
+    def _create_section(self, myModel: object, myPart: object) -> Any:
+        """
+            This internal function defines and returns the section.
+        """
+        mySection = myModel.HomogeneousSolidSection(
+            name=self._section_name,
+            material=self.material_name
+        )
+        mySection_region = regionToolset.Region(cells=myPart.cells)
+        myPart.SectionAssignment(
+            region=mySection_region,
+            sectionName=self._section_name
+        )
+        return mySection
+    
+    def _create_assembly(self, myModel: object, myPart: object) -> object:
+        """
+            This internal function defines and returns the assembly.
+        """
+        myAssembly = myModel.rootAssembly
+        myAssembly.regenerate()  # recommended for stability
+        myInstance = myAssembly.Instance(
+            # internal variable (_): we will add + '_Instance' to model name
+            name=self._assembly_name,
+            part=myPart,
+            dependent=ON  # type: ignore
+        )
+        return myInstance
+    
+    def _create_step(self, myModel: object) -> None:
+        """
+            This creates the steps of the simulation.
+            Definitions: 
+                (1) A step is a period of time during which the analysis...
+                proceeds under a specified set of conditions.
+
+                (2) It defines a phase in the simulation where the loading...
+                boundary conditions, and analysis procedure remains consistent.
+        """
+        myModel.StaticStep(
+            name=self._step_name,
+            previous='Initial',  # this should not be changed!, Abaqus default
+            description=self._step_description
+        )
+
+    def _define_field_output_requests(self, myModel: object) -> None:
+        """
+            This internal function defines field output requests.
+            This is like a subroutine in fortran, it isn't a pure function.
+        """
+
+        myModel.fieldOutputRequests.changeKey(
+            fromName='F-Output-1',
+            toName=self._fieldOutReqName
+        )
+        myModel.fieldOutputRequests[str(self._fieldOutReqName)] \
+            .setValues(variables=self.field_outputs)
         
-        # create the part
-        def _create_part(self, myModel: object) -> object:
-            """
-                This internal function creates the part and the sketch.
-            """
-            myPart = myModel.Part(
-                name=self._part_name,
-                dimensionality=THREE_D,  # type: ignore
-                type=DEFORMABLE_BODY  # type: ignore
-            )
-            mySketch = myModel.ConstrainedSketch(
-                name=self._sketch_name,
-                sheetSize=self._sheet_size
-            ) 
-            mySketch.rectangle(
-                # x1, y1, x2, y2
-                point1=tuple(self.geom_coords[:2]),
-                point2=tuple(self.geom_coords[2:4]) 
-            )
-            myPart.BaseSolidExtrude(sketch=mySketch, depth=self.geom_coords[4])
+    def _define_history_output_requests(self, myModel: object) -> None:
+        """
+            This defines history output requests.
+        """
+        myModel.HistoryOutputRequest(
+            name='Default History Outputs',
+            createStepName=self._step_name,
+            variables=PRESELECT  # type: ignore
+        )
 
-            return myPart
-        
-        # define material properties
-        # the Any type is their because my lazy ass don't know the return type
-        def _define_material(self, myModel: object) -> Any:
-            """This internal defines the material properties in our model"""
+        # deleting the old history output
+        del myModel.historyOutputRequests['H-Output-1']
 
-            myMaterial = myModel.Material(
-                name=self.material_name,
-            )
-            myMaterial.Density(table=((self.density), ))
-            myMaterial.Elastic(table=((self.modulus, self.poisson_ratio)))
-            return myMaterial
-        
-        def _create_section(self, myModel: object, myPart: object) -> Any:
-            """
-                This internal function defines and returns the section.
-            """
-            mySection = myModel.HomogeneousSolidSection(
-                name=self._section_name,
-                material=self.material_name
-            )
-            mySection_region = regionToolset.Region(cells=myPart.cells)
-            myPart.SectionAssignment(
-                region=mySection_region,
-                sectionName=self._section_name
-            )
-            return mySection
-        
-        def _create_assembly(self, myModel: object, myPart: object) -> object:
-            """
-                This internal function defines and returns the assembly.
-            """
-            myAssembly = myModel.rootAssembly
-            myAssembly.regenerate()  # recommended for stability
-            myInstance = myAssembly.Instance(
-                # internal variable (_): we will add + '_Instance' to model name
-                name=self._assembly_name,
-                part=myPart,
-                dependent=ON  # type: ignore
-            )
-            return myInstance
-        
-        def _create_step(self, myModel: object) -> None:
-            """
-                This creates the steps of the simulation.
-                Definitions: 
-                    (1) A step is a period of time during which the analysis...
-                    proceeds under a specified set of conditions.
+    def _apply_BC(self, myModel: object, myInstance: object) -> None:
+        """
+            This applies the displacement boundary condition. 
+            The displacement constraints.
+        """
+        # the face we will be applying the constraints to
+        fixed_face = myInstance.faces.findAt((self.boundary_coords,))
 
-                    (2) It defines a phase in the simulation where the loading...
-                    boundary conditions, and analysis procedure remains consistent.
-            """
-            myModel.StaticStep(
-                name=self._step_name,
-                previous='Initial',  # this should not be changed!, Abaqus default
-                description=self._step_description
-            )
+        # region
+        fixed_region = regionToolset.Region(faces=fixed_face)
 
-        def _define_field_output_requests(self, myModel: object) -> None:
-            """
-                This internal function defines field output requests.
-                This is like a subroutine in fortran, it isn't a pure function.
-            """
+        u1, u2, u3 = self.boundary_constraints
 
-            myModel.fieldOutputRequests.changeKey(
-                fromName='F-Output-1',
-                toName=self._fieldOutReqName
-            )
-            myModel.fieldOutputRequests[str(self._fieldOutReqName)] \
-                .setValues(variables=self.field_outputs)
-            
-        def _define_history_output_requests(self, myModel: object) -> None:
-            """
-                This defines history output requests.
-            """
-            myModel.HistoryOutputRequest(
-                name='Default History Outputs',
-                createStepName=self._step_name,
-                variables=PRESELECT  # type: ignore
-            )
+        myModel.DisplacementBC(
+            name=self._displacementBC_fixed_name,
+            createStepName="Initial",
+            region=fixed_region,
+            u1=u1,
+            u2=u2,
+            u3=u3,
+            distributionType=UNIFORM  # type: ignore
+        )
 
-            # deleting the old history output
-            del myModel.historyOutputRequests['H-Output-1']
+    def _apply_pressure(self, myModel: object, myInstance: object) -> None:
+        """
+            Apply pressure boundary conditions.
+        """
+        # finding the face to apply the pressure
+        displaced_face = myInstance.faces.findAt(((self.displacement_coords),))
+        # volumetric region
+        displaced_region = regionToolset.Region(faces=displaced_face)
 
-        def _apply_BC(self, myModel: object, myInstance: object) -> None:
-            """
-                This applies the displacement boundary condition. 
-                The displacement constraints.
-            """
-            # the face we will be applying the constraints to
-            fixed_face = myInstance.faces.findAt((self.boundary_coords,))
+        # define amplitude for smooth displacement application
+        myModel.TabularAmplitude(
+            name=self._amplitude_name,
+            timeSpan=STEP,  # type: ignore
+            data=((0.0, 0.0), (1.0, 1.0))
+        )
 
-            # region
-            fixed_region = regionToolset.Region(faces=fixed_face)
+        u1, u2, u3 = self.displacement_constraints
 
-            u1, u2, u3 = self.boundary_constraints
-
-            myModel.DisplacementBC(
-                name=self._displacementBC_fixed_name,
-                createStepName="Initial",
-                region=fixed_region,
-                u1=u1,
-                u2=u2,
-                u3=u3,
-                distributionType=UNIFORM  # type: ignore
-            )
-
-        def _apply_pressure(self, myModel: object, myInstance: object) -> None:
-            """
-                Apply pressure boundary conditions.
-            """
-            # finding the face to apply the pressure
-            displaced_face = myInstance.faces.findAt(((self.displacement_coords),))
-            # volumetric region
-            displaced_region = regionToolset.Region(faces=displaced_face)
-
-            # define amplitude for smooth displacement application
-            myModel.TabularAmplitude(
-                name=self._amplitude_name,
-                timeSpan=STEP,  # type: ignore
-                data=((0.0, 0.0), (1.0, 1.0))
-            )
-
-            u1, u2, u3 = self.displacement_constraints
-
-            myModel.DisplacementBC(
-                name=self._displacementBC_edge_name,
-                region=displaced_region,
-                u1=u1,
-                u2=u2,
-                u3=u3,
-                amplitude=self._amplitude_name,
-                distributionType=UNIFORM,  # type: ignore
-                localCsys=None
-            )
+        myModel.DisplacementBC(
+            name=self._displacementBC_edge_name,
+            region=displaced_region,
+            u1=u1,
+            u2=u2,
+            u3=u3,
+            amplitude=self._amplitude_name,
+            distributionType=UNIFORM,  # type: ignore
+            localCsys=None
+        )
 
 
-        def _generate_mesh(self, 
-                           myPart: object, 
-                           mesh_type) -> None:
-            """
-                Generates mesh on part.
-            """
+    def _generate_mesh(self, 
+                        myPart: object, 
+                        mesh_type) -> None:
+        """
+            Generates mesh on part.
+        """
 
-            part_region= regionToolset.Region(cells=myPart.cells)
-            elemType1 = mesh.ElemType(  # type: ignore
-                elemCode=mesh_type,
-                elemLibrary=STANDARD  # type: ignore
-            )
-            myPart.setElementType(
-                regions=part_region,
-                elemTypes=(elemType1,)
-            )
-            myPart.seedPart(
-                size=self.mesh_size,
-                deviationFactor=self.mesh_deviation_factor
-            )
-            # generate mesh
-            myPart.generateMesh()
+        part_region= regionToolset.Region(cells=myPart.cells)
+        elemType1 = mesh.ElemType(  # type: ignore
+            elemCode=mesh_type,
+            elemLibrary=STANDARD  # type: ignore
+        )
+        myPart.setElementType(
+            regions=part_region,
+            elemTypes=(elemType1,)
+        )
+        myPart.seedPart(
+            size=self.mesh_size,
+            deviationFactor=self.mesh_deviation_factor
+        )
+        # generate mesh
+        myPart.generateMesh()
 
-        def _run_job(self) -> Any:
-            """
-                This internal function runs the job.
-            """
+    def _run_job(self) -> Any:
+        """
+            This internal function runs the job.
+        """
 
-            mdb.Job(  # type: ignore
-                name=self._job_name,
-                model=self.model_name,
-                type=ANALYSIS,  # type: ignore
-                description=self._job_description
-            )  
-            mdb.jobs[self._job_name].submit(consistencyChecking=OFF)  # type: ignore
-            mdb.jobs[self._job_name].waitForCompletion()  # type: ignore
+        mdb.Job(  # type: ignore
+            name=self._job_name,
+            model=self.model_name,
+            type=ANALYSIS,  # type: ignore
+            description=self._job_description
+        )  
+        mdb.jobs[self._job_name].submit(consistencyChecking=OFF)  # type: ignore
+        mdb.jobs[self._job_name].waitForCompletion()  # type: ignore
 
-        def _visualize_results(self) -> Any:
-            """
-                Visualize results.
-            """
-            resultsViewport = session.Viewport(name='ResultsViewport')  # type: ignore
-            odbPath = self._job_name + '.odb'
-            while not os.path.exists(odbPath):
-                time.sleep(1)
-            odb = session.openOdb(name=odbPath)  # type: ignore
-            resultsViewport.setValues(displayedObject=odb)
-            resultsViewport.odbDisplay.display.setValues(plotState=(CONTOURS_ON_DEF,))  # type: ignore
+    def _visualize_results(self) -> Any:
+        """
+            Visualize results.
+        """
+        resultsViewport = session.Viewport(name='ResultsViewport')  # type: ignore
+        odbPath = self._job_name + '.odb'
+        while not os.path.exists(odbPath):
+            time.sleep(1)
+        odb = session.openOdb(name=odbPath)  # type: ignore
+        resultsViewport.setValues(displayedObject=odb)
+        resultsViewport.odbDisplay.display.setValues(plotState=(CONTOURS_ON_DEF,))  # type: ignore
 
 
-        def run_unittest(self):
-            """
-                Creates and runs the unittest.
-            """
+    def run_unittest(self):
+        """
+            Creates and runs the unittest.
+        """
 
-            # create model
-            myModel = self._create_model()
-            # create part
-            myPart = self._create_part(myModel=myModel)
-            # define material
-            self._define_material(myModel)
-            # create section
-            self._create_section(myModel=myModel, myPart=myPart)
-            # create assembly
-            myInstance = self._create_assembly(myModel=myModel, myPart=myPart)
-            # create step
-            self._create_step(myModel=myModel)
-            # define field output requests
-            self._define_field_output_requests(myModel=myModel)
-            # define history output requests
-            self._define_history_output_requests(myModel=myModel)
-            # apply displacement boundary condition
-            self._apply_BC(myModel=myModel, myInstance=myInstance)
-            # apply pressure
-            self._apply_pressure(myModel=myModel, myInstance=myInstance)
-            mesh_type = self._mesh_type_selector()
-            # generate mesh
-            self._generate_mesh(myPart=myPart, mesh_type=mesh_type)
-            # _run job
-            self._run_job()
-            # produce odb output (visualization)
-            self._visualize_results()
+        # create model
+        myModel = self._create_model()
+        # create part
+        myPart = self._create_part(myModel=myModel)
+        # define material
+        self._define_material(myModel)
+        # create section
+        self._create_section(myModel=myModel, myPart=myPart)
+        # create assembly
+        myInstance = self._create_assembly(myModel=myModel, myPart=myPart)
+        # create step
+        self._create_step(myModel=myModel)
+        # define field output requests
+        self._define_field_output_requests(myModel=myModel)
+        # define history output requests
+        self._define_history_output_requests(myModel=myModel)
+        # apply displacement boundary condition
+        self._apply_BC(myModel=myModel, myInstance=myInstance)
+        # apply pressure
+        self._apply_pressure(myModel=myModel, myInstance=myInstance)
+        mesh_type = self._mesh_type_selector()
+        # generate mesh
+        self._generate_mesh(myPart=myPart, mesh_type=mesh_type)
+        # _run job
+        self._run_job()
+        # produce odb output (visualization)
+        self._visualize_results()
 
 
 obj = Unittest()
