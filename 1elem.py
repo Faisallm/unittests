@@ -89,7 +89,7 @@ myModel.StaticStep(
     # internal variable: to be defined as: 'Apply controlled displacement in this step'
     description="Apply controlled displacement in this step",
     # default values, can be modified by users
-    nlgeom=OFF,
+    nlgeom=OFF,  # type: ignore
     initialInc=0.1,
     maxInc=0.1,
     minInc=1e-05,

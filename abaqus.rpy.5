@@ -1,8 +1,8 @@
 # -*- coding: mbcs -*-
 #
-# Abaqus/CAE Release 2024 replay file
+# Abaqus/Viewer Release 2024 replay file
 # Internal Version: 2023_09_21-08.55.25 RELr426 190762
-# Run by Faisal on Wed Jun 18 10:44:52 2025
+# Run by Faisal on Wed Jun 18 11:10:15 2025
 #
 
 # from driverUtils import executeOnCaeGraphicsStartup
@@ -15,7 +15,7 @@ session.Viewport(name='Viewport: 1', origin=(1.5625, 1.5463), width=230,
 session.viewports['Viewport: 1'].makeCurrent()
 from driverUtils import executeOnCaeStartup
 executeOnCaeStartup()
-execfile('1elem.py', __main__.__dict__)
-#* AttributeError: 'Model' object has no attribute 'fieldOutputRequests'
-#* File "1elem.py", line 83, in <module>
-#*     myModel.fieldOutputRequests.changeKey(
+execfile('test.py', __main__.__dict__)
+#* ImportError: No module named 'regionToolset'
+#* File "test.py", line 6, in <module>
+#*     import regionToolset
