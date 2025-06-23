@@ -55,13 +55,13 @@ class Unittest(object):
                 geom_coords: Tuple[float] = (0.0, 0.0, 1.0, 1.0, 1.0),   # x1, y1, x2, y2, z
                 boundary_coords: Tuple[float] = (0.0, 0.5, 0.5),  # these are default values
                 # fixed in x, free in y, fixed in z-direction (prevent out of plane movement)
-                boundary_constraints: Tuple[Any] = (0.0, UNSET, UNSET),  # type: ignore
+                boundary_constraints: Tuple[Any] = (0.0, UNSET, 0.0),  # type: ignore
                 displacement_coords: Tuple[float] = (1.0, 0.5, 0.5),
                 # displacement controlled
                 # 0.1 mm displacement in the X-direction
                 # No constrain in the Y-direction (free to deform)
                 # No constraint in the Z-direction (free to expand or contract)
-                displacement_constraints: Tuple[Any] = (0.001, UNSET, UNSET),  # type: ignore
+                displacement_constraints: Tuple[Any] = (0.1, UNSET, UNSET),  # type: ignore
                 mesh_type: str = 'C3D8RT',
                 mesh_size: float = 1.0,
                 mesh_deviation_factor: float = 0.1
@@ -88,7 +88,7 @@ class Unittest(object):
         self.displacement_constraints: Tuple[Any] = displacement_constraints
         self.mesh_type: str = mesh_type
         self.mesh_size: float = mesh_size
-        self.mesh_deviation_factor: float = mesh_deviation_factor,
+        self.mesh_deviation_factor: float = mesh_deviation_factor
 
         # internal variables
         self._part_name: str = self.model_name + '_Part'  # partName
@@ -167,18 +167,19 @@ class Unittest(object):
         myMaterial.Elastic(table=((self.modulus, self.poisson_ratio), ))
 
         # Thermal properties (required for CoupledTempDisplacementStep)
-        myMaterial.SpecificHeat(table=((1800.0,),))              # J/kg·K
-        myMaterial.Conductivity(table=((0.2,),))                # W/m·K
-        myMaterial.Expansion(table=((150e-6,),), type=ISOTROPIC)      # type: ignore # 1/K, isotropic  
-        
+        # myMaterial.SpecificHeat(table=((1800.0,),))              # J/kg·K
+        # myMaterial.Conductivity(table=((0.2,),))                # W/m·K
+        # myMaterial.Expansion(table=((150e-6,),), type=ISOTROPIC)      # type: ignore # 1/K, isotropic  
+        myMaterial.SpecificHeat(table=((1000.0,),))  # J/kg-K (example)
+        myMaterial.Conductivity(table=((0.5,),))    # W/m-K (example)
         myMaterial.Depvar(n=30)  # State variables
 
         # UMAT for shape memory effects (critical!)
-        myMaterial.UserMaterial(
-            mechanicalConstants=(2500, 0.35),  # E, ν (glassy state)
-            thermalConstants=(),           # Tg (°C) (example: 60°C)
-            type=THERMOMECHANICAL  # type: ignore
-        )
+        # myMaterial.UserMaterial(
+        #     mechanicalConstants=(2500, 0.35),  # E, ν (glassy state)
+        #     thermalConstants=(),           # Tg (°C) (example: 60°C)
+        #     type=THERMOMECHANICAL  # type: ignore
+        # )
 
         return myMaterial
     
@@ -294,8 +295,12 @@ class Unittest(object):
         """
             This applies an initial temperature boundary condition.
         """
-        all_nodes = myInstance.nodes
-        all_nodes_region = regionToolset.Region(nodes=all_nodes)
+        all_nodes = myModel.rootAssembly.instances[self._assembly_name].nodes
+        print(f"Number of nodes in instance: {len(all_nodes)}")  # Debug print
+        myModel.rootAssembly.Set(name='ALLNODESSET', nodes=all_nodes)
+        myModel.rootAssembly.regenerate()  # ensure it’s updated
+
+        all_nodes_region = myModel.rootAssembly.sets['ALLNODESSET']
 
         myModel.TemperatureBC(
             name='TempBC',
@@ -354,10 +359,10 @@ class Unittest(object):
             regions=part_region,
             elemTypes=(elemType1,)
         )
-        print(f'mesh deviation factor: {self.mesh_deviation_factor[0]}')
+        # print(f'mesh deviation factor: {self.mesh_deviation_factor[0]}')
         myPart.seedPart(
             size=self.mesh_size,
-            deviationFactor=self.mesh_deviation_factor[0]
+            deviationFactor=self.mesh_deviation_factor
         )
         # generate mesh
         myPart.generateMesh()
@@ -410,27 +415,33 @@ class Unittest(object):
         self._define_field_output_requests(myModel=myModel)
         # define history output requests
         self._define_history_output_requests(myModel=myModel)
+        mesh_type = self._mesh_type_selector()
+        # generate mesh
+        self._generate_mesh(myPart=myPart, mesh_type=mesh_type)
+
         # apply displacement boundary condition
         self._apply_BC(myModel=myModel, myInstance=myInstance)
         # apply pressure
         self._apply_pressure(myModel=myModel, myInstance=myInstance)
+        # regenerate after mesh to activate nodes
+        myModel.rootAssembly.regenerate()
         # apply temperature
         self._apply_temp_bc(myModel=myModel, myInstance=myInstance)
-        mesh_type = self._mesh_type_selector()
-        # generate mesh
-        self._generate_mesh(myPart=myPart, mesh_type=mesh_type)
-        # _run job
-        #self._run_job()
-        # produce odb output (visualization)
-        #self._visualize_results()
+
+        # write input file BEFORE running the job
         myJob = mdb.Job(  # type: ignore
             name=self.model_name,
             model=myModel.name
         )
-
-        print(f'Directory: {os.getcwd()}')
-
         myJob.writeInput()
+        # _run job
+        self._run_job()
+        # produce odb output (visualization)
+        self._visualize_results()
+        myJob = mdb.Job(  # type: ignore
+            name=self.model_name,
+            model=myModel.name
+        )
 
 
 # Single element method
