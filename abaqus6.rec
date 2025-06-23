@@ -1,0 +1,12 @@
+# -*- coding: mbcs -*-
+from assembly import *
+from part import *
+from sketch import *
+from material import *
+from section import *
+from step import *
+from mesh import *
+from job import *
+from visualization import *
+mdb.models.changeKey(fromName='Model-1', toName='.odb')
+#* AbaqusNameError: invalid model name

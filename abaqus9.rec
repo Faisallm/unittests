@@ -1,0 +1,17 @@
+# -*- coding: mbcs -*-
+from assembly import *
+from part import *
+from sketch import *
+from material import *
+from section import *
+from step import *
+from mesh import *
+from job import *
+from visualization import *
+mdb.models.changeKey(fromName='Model-1', toName='NineElement')
+mdb.models['NineElement'].Part(dimensionality=THREE_D, name='NineElement_Part', 
+    type=DEFORMABLE_BODY)
+mdb.models['NineElement'].ConstrainedSketch(name='NineElement_Sketch', 
+    sheetSize=2.0)
+mdb.models['NineElement'].sketches['NineElement_Sketch'].rectangle(point1=(0.0, 
+    0.0), point2=(3.0, 3.0))

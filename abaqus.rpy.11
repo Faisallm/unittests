@@ -2,7 +2,7 @@
 #
 # Abaqus/CAE Release 2024 replay file
 # Internal Version: 2023_09_21-08.55.25 RELr426 190762
-# Run by Faisal on Thu Jun 19 05:46:34 2025
+# Run by Faisal on Thu Jun 19 05:45:33 2025
 #
 
 # from driverUtils import executeOnCaeGraphicsStartup
@@ -19,14 +19,10 @@ execfile('main.py', __main__.__dict__)
 #: Running with __name__ = __main__
 #: Arguments: ['C:\\SIMULIA\\EstProducts\\2024\\win_b64\\code\\bin\\ABQcaeK.exe', '-cae', '-noGUI', 'main.py', '-tmpdir', 'C:\\Users\\Faisal\\AppData\\Local\\Temp', '-lmlog', 'ON']
 #: model name: NineElement
-#: mesh deviation factor: 0.1
-#: Model: C:/SIMULIA/EstProducts/2024/win_b64/code/bin/NineElement_Job.odb
-#: Number of Assemblies:         1
-#: Number of Assembly instances: 0
-#: Number of Part instances:     1
-#: Number of Meshes:             1
-#: Number of Element Sets:       1
-#: Number of Node Sets:          1
-#: Number of Steps:              1
-print('RT script done')
-#: RT script done
+#* IndexError: tuple index out of range
+#* File "main.py", line 390, in <module>
+#*     obj.run_unittest()
+#* File "main.py", line 352, in run_unittest
+#*     myPart = self._create_part(myModel=myModel)
+#* File "main.py", line 152, in _create_part
+#*     myPart.BaseSolidExtrude(sketch=mySketch, depth=self.geom_coords[4])

@@ -19,7 +19,8 @@ for module in modules:
 # get file path of current file
 current_working_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 # change file path
-os.chdir(current_working_dir)
+# os.chdir(current_working_dir)
+os.chdir(r'C:\Users\Faisal\Desktop\unittests')
 # we going to create a logging module to print the current file path to, using decorators!
 
 print(f"Running with __name__ = {__name__}")
@@ -38,29 +39,30 @@ class Unittest(object):
     """
 
     def __init__(self,
-                model_name: str = 'model',
-                material_name: str = 'material',
-                density: float = 7872,  # default AISI 1005 Steel
-                modulus: float = 200E9,
-                poisson_ratio: float = 0.29,
+                model_name: str = 'Model',
+                material_name: str = 'smp-10',
+                density: float = 1.2e-9,  # default AISI 1005 Steel
+                modulus: float = 2500,
+                poisson_ratio: float = 0.35,
                 nlgeom: bool = False,   # this is off by default
-                initialInc: float = 0.1,
-                maxInc: float = 0.1,
-                minInc: float = 1e-05,
+                initialInc: float = 60.0,
+                maxInc: float = 1000000,
+                minInc: float = 1e-6,
+                deltmx: float = 10.0,
                 maxNumInc: int = 100,
                 # this has a default value of stress, strain, displacement, reaction
                 field_outputs: Tuple[str] = ("S", "E", "U", "RF"),
                 geom_coords: Tuple[float] = (0.0, 0.0, 1.0, 1.0, 1.0),   # x1, y1, x2, y2, z
                 boundary_coords: Tuple[float] = (0.0, 0.5, 0.5),  # these are default values
                 # fixed in x, free in y, fixed in z-direction (prevent out of plane movement)
-                boundary_constraints: Tuple[float] = (0.0, UNSET, 0.0),  # type: ignore
+                boundary_constraints: Tuple[Any] = (0.0, UNSET, UNSET),  # type: ignore
                 displacement_coords: Tuple[float] = (1.0, 0.5, 0.5),
                 # displacement controlled
                 # 0.1 mm displacement in the X-direction
                 # No constrain in the Y-direction (free to deform)
                 # No constraint in the Z-direction (free to expand or contract)
-                displacement_constraints: Tuple[float] = (0.001, UNSET, UNSET),  # type: ignore
-                mesh_type: str = 'C3D8R',
+                displacement_constraints: Tuple[Any] = (0.001, UNSET, UNSET),  # type: ignore
+                mesh_type: str = 'C3D8RT',
                 mesh_size: float = 1.0,
                 mesh_deviation_factor: float = 0.1
                 ):
@@ -81,9 +83,9 @@ class Unittest(object):
         self.field_outputs: Tuple[str] = field_outputs
         self.geom_coords: Tuple[float] = geom_coords
         self.boundary_coords: Tuple[float] = boundary_coords
-        self.boundary_constraints: Tuple[float] = boundary_constraints
+        self.boundary_constraints: Tuple[Any] = boundary_constraints
         self.displacement_coords: Tuple[float] = displacement_coords
-        self.displacement_constraints: Tuple[float] = displacement_constraints
+        self.displacement_constraints: Tuple[Any] = displacement_constraints
         self.mesh_type: str = mesh_type
         self.mesh_size: float = mesh_size
         self.mesh_deviation_factor: float = mesh_deviation_factor,
@@ -102,7 +104,7 @@ class Unittest(object):
         self._job_name = self.model_name + '_Job'
         self._job_description = self.model_name + '_Single element test'
         self._result_viewport = self.model_name + '_ResultsViewport'
-        self._odb_name = self.model_name = '.odb'  # odb file extension
+        self._odb_name = self.model_name + '.odb'  # odb file extension
         self._sheet_size: float = 2.0
 
     # extrude the depth, the 3D component
@@ -111,20 +113,24 @@ class Unittest(object):
             This internal function allows us to choose a suitable mesh type from abaqus
         '''
         mesh_type = None
-        if self.mesh_type == 'C3D8R':
-            mesh_type = C3D8R  # type: ignore
+        if self.mesh_type == 'C3D8RT':
+            mesh_type = C3D8RT  # type: ignore
         else:
             # raise an error and and to logger file
             raise ValueError(f'Incorrect mesh type.\nCheck mesh_type parameter.')
         return mesh_type
 
     # create the model
-    def _create_model(self) -> object:
-        """This internal function creates a model in abaqus."""
-
-        mdb.models.changeKey(fromName='Model-1', toName=self.model_name)  # type: ignore
+    def _create_model(self):
+        """This internal function creates or accesses a model in Abaqus."""
+        # Check if model already exists
+        if self.model_name in mdb.models.keys():  # type: ignore
+            return mdb.models[self.model_name]  # type: ignore
+        print(f'model name: {self.model_name}')
+        # Create new model if it doesn't exist
+        mdb.models.changeKey(fromName="Model-1", toName=str(self.model_name))  # type: ignore
         myModel = mdb.models[self.model_name]  # type: ignore
-        return myModel
+        return myModel 
     
     # create the part
     def _create_part(self, myModel: object) -> object:
@@ -157,8 +163,23 @@ class Unittest(object):
         myMaterial = myModel.Material(
             name=self.material_name,
         )
-        myMaterial.Density(table=((self.density), ))
-        myMaterial.Elastic(table=((self.modulus, self.poisson_ratio)))
+        myMaterial.Density(table=((self.density, ), ))
+        myMaterial.Elastic(table=((self.modulus, self.poisson_ratio), ))
+
+        # Thermal properties (required for CoupledTempDisplacementStep)
+        myMaterial.SpecificHeat(table=((1800.0,),))              # J/kg·K
+        myMaterial.Conductivity(table=((0.2,),))                # W/m·K
+        myMaterial.Expansion(table=((150e-6,),), type=ISOTROPIC)      # type: ignore # 1/K, isotropic  
+        
+        myMaterial.Depvar(n=30)  # State variables
+
+        # UMAT for shape memory effects (critical!)
+        myMaterial.UserMaterial(
+            mechanicalConstants=(2500, 0.35),  # E, ν (glassy state)
+            thermalConstants=(),           # Tg (°C) (example: 60°C)
+            type=THERMOMECHANICAL  # type: ignore
+        )
+
         return myMaterial
     
     def _create_section(self, myModel: object, myPart: object) -> Any:
@@ -200,10 +221,24 @@ class Unittest(object):
                 (2) It defines a phase in the simulation where the loading...
                 boundary conditions, and analysis procedure remains consistent.
         """
-        myModel.StaticStep(
+
+        # old code, I was using this before adding temperature constraints
+        # myModel.StaticStep(
+        #     name=self._step_name,
+        #     previous='Initial',  # this should not be changed!, Abaqus default
+        #     description=self._step_description
+        # )
+
+        myModel.CoupledTempDisplacementStep(
             name=self._step_name,
-            previous='Initial',  # this should not be changed!, Abaqus default
-            description=self._step_description
+            previous='Initial',
+            description=self._step_description,
+            timePeriod=34800.0,  # my simulation time 
+            maxNumInc=1000000,
+            initialInc=60.0,
+            minInc=1e-6,
+            deltmx=10.0,
+            nlgeom=OFF    # type: ignore  # or ON if you need geometric nonlinearity
         )
 
     def _define_field_output_requests(self, myModel: object) -> None:
@@ -255,6 +290,23 @@ class Unittest(object):
             distributionType=UNIFORM  # type: ignore
         )
 
+    def _apply_temp_bc(self, myModel: object, myInstance: object) -> None:
+        """
+            This applies an initial temperature boundary condition.
+        """
+        all_nodes = myInstance.nodes
+        all_nodes_region = regionToolset.Region(nodes=all_nodes)
+
+        myModel.TemperatureBC(
+            name='TempBC',
+            createStepName=self._step_name,
+            region=all_nodes_region,
+            magnitude=20.0,
+            amplitude=self._amplitude_name,
+            distributionType=UNIFORM,  # type: ignore
+            fixed=OFF  # type: ignore
+        )
+
     def _apply_pressure(self, myModel: object, myInstance: object) -> None:
         """
             Apply pressure boundary conditions.
@@ -268,13 +320,14 @@ class Unittest(object):
         myModel.TabularAmplitude(
             name=self._amplitude_name,
             timeSpan=STEP,  # type: ignore
-            data=((0.0, 0.0), (1.0, 1.0))
+            data=((0, 20), (13800, 250), (21000, 250), (34800, 20))
         )
 
         u1, u2, u3 = self.displacement_constraints
 
         myModel.DisplacementBC(
             name=self._displacementBC_edge_name,
+            createStepName=self._step_name,
             region=displaced_region,
             u1=u1,
             u2=u2,
@@ -301,9 +354,10 @@ class Unittest(object):
             regions=part_region,
             elemTypes=(elemType1,)
         )
+        print(f'mesh deviation factor: {self.mesh_deviation_factor[0]}')
         myPart.seedPart(
             size=self.mesh_size,
-            deviationFactor=self.mesh_deviation_factor
+            deviationFactor=self.mesh_deviation_factor[0]
         )
         # generate mesh
         myPart.generateMesh()
@@ -360,14 +414,39 @@ class Unittest(object):
         self._apply_BC(myModel=myModel, myInstance=myInstance)
         # apply pressure
         self._apply_pressure(myModel=myModel, myInstance=myInstance)
+        # apply temperature
+        self._apply_temp_bc(myModel=myModel, myInstance=myInstance)
         mesh_type = self._mesh_type_selector()
         # generate mesh
         self._generate_mesh(myPart=myPart, mesh_type=mesh_type)
         # _run job
-        self._run_job()
+        #self._run_job()
         # produce odb output (visualization)
-        self._visualize_results()
+        #self._visualize_results()
+        myJob = mdb.Job(  # type: ignore
+            name=self.model_name,
+            model=myModel.name
+        )
+
+        print(f'Directory: {os.getcwd()}')
+
+        myJob.writeInput()
 
 
-obj = Unittest()
+# Single element method
+
+# obj = Unittest(model_name='SingleElementModel')
+
+
+# nine (9) element method
+# obj = Unittest(
+#     model_name='NineElement',
+#     geom_coords=(0.0, 0.0, 3.0, 3.0, 1.0),
+#     boundary_coords=(0.0, 1.5, 0.5),
+#     displacement_coords=(3.0, 1.5, 0.5)
+# )
+
+# 27 elements
+obj = Unittest(model_name='twenty_seven',
+               mesh_size=1.0/3.0)
 obj.run_unittest()
