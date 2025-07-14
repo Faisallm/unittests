@@ -1,0 +1,16 @@
+*start global
+*mode pyrolysis
+*units mm
+*ini phi 1e-20
+*ini temp 20
+*damage enable true
+*damage criteria mps
+*constitutive linear.elastic
+*end global
+*start material
+*name smp_10
+*end material
+*start material
+*name as4_carbon_fiber
+*end material
+*eof

@@ -459,5 +459,5 @@ class Unittest(object):
 
 # 27 elements
 obj = Unittest(model_name='twenty_seven',
-               mesh_size=1.0/3.0)
+               mesh_size=1.0/2.0)
 obj.run_unittest()

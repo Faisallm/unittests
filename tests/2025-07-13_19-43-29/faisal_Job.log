@@ -1,0 +1,18 @@
+Analysis initiated from SIMULIA established products
+Abaqus JOB faisal_Job
+Abaqus 2024
+Abaqus License Manager checked out the following licenses:
+Abaqus/Standard checked out 5 tokens from Flexnet server carletonftp.civil.columbia.edu.
+<13 out of 30 licenses remain available>.
+Begin Analysis Input File Processor
+7/13/2025 7:43:32 PM
+Run pre.exe
+7/13/2025 7:43:38 PM
+Abaqus Error: Analysis Input File Processor exited with an error - Please see the 
+faisal_Job.dat file for possible error messages if the file exists.
+Begin SIM Wrap-up
+7/13/2025 7:43:39 PM
+Run SMASimUtility.exe
+7/13/2025 7:43:39 PM
+End SIM Wrap-up
+Abaqus/Analysis exited with errors

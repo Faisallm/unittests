@@ -1,0 +1,56 @@
+ PRM.LOG::2025.07.13.18H00M22S -->
+ Logger initialized for process modeling simulation
+ PRM.LOG::2025.07.13.18H00M22S -->
+ Job: faisal
+ PRM.LOG::2025.07.13.18H00M22S -->
+ Compiler version:
+Intel(R) Fortran Compiler for applications running on Intel(R
+ ) 64, Version 2025.0.4 Build 20241205
+Compiler options:
+/IC:\Users\Faisal\Deskt
+ op\process_model\process_model\process_model\include /I. /IC:\SIMULIA\EstProduc
+ ts\2024\win_b64\code\include /IC:\SIMULIA\EstProducts\2024\win_b64\..\SMAUsubs\
+ PublicInterfaces /c /fpp /extend-source /DABQ_WIN86_64 /DABQ_FORTRAN /iface:cre
+ f /recursive /Qauto /align:array64byte /Qpc64 /Qprec-div /Qprec-sqrt /Qfma- /fp
+ :precise /Qimf-arch-consistency:true /Qfp-speculation:safe /Qprotect-parens /Qf
+ p-stack-check /reentrancy:threaded /QxSSE3 /QaxAVX /include:c:/users/faisal/des
+ ktop/process_model/process_model/process_model/fort/src /include:C:\SIMULIA\Est
+ Products\2024 /DDPX /free /MD
+ PRM.LOG::2025.07.13.18H00M22S -->
+ parsing global opts
+ PRM.LOG::2025.07.13.18H00M22S -->
+ parsing material opts
+ PRM.LOG::2025.07.13.18H00M22S -->
+ parsing element defintions
+ PRM.LOG::2025.07.13.18H00M22S -->
+ Successfully parsed config and mesh .prm files.
+ PRM.LOG::2025.07.13.18H00M22S -->
+ Analysis mode set to: cure
+ PRM.LOG::2025.07.13.18H00M22S -->
+ Successfully initiated data structures for process modeling analysis!
+ PRM.LOG::2025.07.13.18H00M22S -->
+ Process modeling simulation setup complete. Beginning analysis...
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            1
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            2
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            3
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            4
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            5
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            6
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            7
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            8
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:            9
+ PRM.LOG::2025.07.13.18H00M22S -->
+ End of increment:           10
+ PRM.LOG::2025.07.13.18H00M23S -->
+ End of increment:           11
+ PRM.LOG::2025.07.13.18H00M23S -->
+ End of increment:           12

@@ -1,0 +1,41 @@
+<Description>
+   ABAQUS/ABQvwrK rank 0 received the ABORT signal
+
+</Description>
+
+<Context>
+   CAE
+</Context>
+
+<Callstack>
+  1)  ucrtbase.dll                abort                                   
+  2)  ucrtbase.dll                terminate                               
+  3)  VCRUNTIME140_1.dll        unknown                                 
+</Callstack>
+
+<Memory>
+   <Current>            0 GB </Current>
+   <Resident>           0 GB </Resident>
+   <Physical>          63 GB </Physical>
+   <Limit>              0 GB </Limit>
+   <Accessible>        63 GB </Accessible>
+   <Available>         32 GB </Available>
+   <Allocator>            DL </Allocator>
+</Memory>
+
+<Swap>
+       <Size>          67 GB </Size>
+       <Used>          37 GB </Used>
+       <Free>          30 GB </Free>
+</Swap>
+
+<Directories>
+  <current> C:\Users\Faisal\Desktop\unittests\tests\2025-07-13_19-24-05 </current> <free>   1560 GB </free>   <used>    324 GB </used> 
+     <temp> C:\Users\Faisal\AppData\Local\Temp </temp>    <free>   1560 GB </free>
+</Directories>
+
+<Installation>
+     <Version> 2024 6.24-1 </Version>
+       <Build> 2023_09_21-08.55.25 RELr426 190762 </Build>
+</Installation>
+

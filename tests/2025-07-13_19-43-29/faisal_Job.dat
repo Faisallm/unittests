@@ -1,0 +1,172 @@
+1
+
+   Abaqus 2024                                  Date 13-Jul-2025   Time 19:43:35
+   For use by TRUSTEES OF COLUMBIA UNIVERSITY IN THE CITY OF NEW YORK under license from Dassault Systemes or its subsidiary.
+
+
+
+                         The Abaqus Software is a product of:
+
+                           Dassault Systemes SIMULIA Corp.
+                           1301 Atwood Avenue, Suite 101W
+                              Johnston, RI 02919, USA
+ 
+
+
+                   The Abaqus Software is available only under license
+                   from Dassault Systemes or its subsidiary and may be
+                   used or reproduced only in accordance with the terms
+                   of such license.
+ 
+                          On machine MM6263WS02 
+                          you are authorized to run
+                          Abaqus/Standard until 27-Feb-2027
+
+                          Your site id is: 200000000028930 
+
+
+ 
+                    For assistance or any other information you may
+                    obtain contact information for your local office
+                    from the world wide web at:
+
+                      https://www.3ds.com/products-services/simulia/services-support/
+
+ 
+                * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+                *                                                         * 
+                *                   *****************                     * 
+                *                   *  N O T I C E  *                     * 
+                *                   *****************                     * 
+                *                                                         * 
+                *                                                         * 
+                *                       Abaqus 2024                       * 
+                *                                                         * 
+                *       BUILD ID: 2023_09_21-08.55.25 RELr426 190762      * 
+                *                                                         * 
+                *                                                         * 
+                *  Please make sure you are using                         * 
+                *  release Abaqus 2024 manuals                            * 
+                *  plus the notes accompanying this release.              * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *                                                         * 
+                *   This program may not be used for commercial purposes  * 
+                *           without payment of a commercial fee.          * 
+                *                                                         * 
+                * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+
+
+ 
+
+
+
+     PROCESSING PART, INSTANCE, AND ASSEMBLY INFORMATION
+   *******************************************************
+
+
+     END PROCESSING PART, INSTANCE, AND ASSEMBLY INFORMATION
+   ***********************************************************
+
+
+
+
+     OPTIONS BEING PROCESSED
+   ***************************
+
+
+
+ ***ERROR: in keyword *AMPLITUDE, file "faisal_Job.inp", line 895: A TABULAR 
+           AMPLITUDE CURVE FAISAL_DISPLACEMENTAMP IS DEFINED WITH TIME NOT 
+           MONOTONICALLY INCREASING AT TIME 70800.
+ ***NOTE: DUE TO AN INPUT ERROR THE ANALYSIS PRE-PROCESSOR HAS BEEN UNABLE TO 
+          INTERPRET SOME DATA.  SUBSEQUENT ERRORS MAY BE CAUSED BY THIS OMISSION
+  *Heading
+          faisal_Single element test                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+  *Element, type=C3D8RT
+  *Elset, elset=ASSEMBLY_FAISAL_INSTANCE__PICKEDSET2
+  *Elset, elset=ASSEMBLY__PICKEDSET3
+  *Elset, elset=ASSEMBLY__PICKEDSET4
+  *coupledtemperature-displacement, creep=NONE, deltmx=10
+  *material, name=SMP-10
+  *conductivity
+  *density
+  *depvar
+  *elastic
+  *specificheat
+
+ ***WARNING: THE ABSOLUTE ZERO TEMPERATURE HAS NOT BEEN SPECIFIED FOR COMPUTING 
+             INTERNAL THERMAL ENERGY USING THE ABSOLUTE ZERO PARAMETER ON THE 
+             *PHYSICAL CONSTANTS OPTION. A DEFAULT VALUE OF 0.0000 WILL BE 
+             ASSUMED.
+  *solidsection, elset=ASSEMBLY_FAISAL_INSTANCE__PICKEDSET2, material=SMP-10
+  *solidsection, elset=ASSEMBLY_FAISAL_INSTANCE__PICKEDSET2, material=SMP-10
+  *boundary
+  *boundary, amplitude=FAISAL_DISPLACEMENTAMP
+  *boundary, amplitude=FAISAL_DISPLACEMENTAMP
+  *boundary
+  *boundary, amplitude=FAISAL_DISPLACEMENTAMP
+  *boundary, amplitude=FAISAL_DISPLACEMENTAMP
+  *output, field
+  *output, history, variable=PRESELECT
+  *elementoutput, directions=YES
+  *output, field
+  *output, history, variable=PRESELECT
+  *elementoutput, directions=YES
+  *output, field
+  *output, history, variable=PRESELECT
+  *elementoutput, directions=YES
+  *Step, name=faisal_Displacement_Step, nlgeom=NO, inc=1000000
+  *output, field
+  *output, history, variable=PRESELECT
+  *Step, name=faisal_Displacement_Step, nlgeom=NO, inc=1000000
+  *Step, name=faisal_Displacement_Step, nlgeom=NO, inc=1000000
+  faisal_Apply controlled displacement in this step                               
+  *coupledtemperature-displacement, creep=NONE, deltmx=10
+  *boundary, amplitude=FAISAL_DISPLACEMENTAMP
+  *boundary, amplitude=FAISAL_DISPLACEMENTAMP
+  *output, field
+  *nodeoutput
+  *elementoutput, directions=YES
+  *output, history, variable=PRESELECT
+  *endstep
+  *boundary
+  *Step, name=faisal_Displacement_Step, nlgeom=NO, inc=1000000
+  *coupledtemperature-displacement, creep=NONE, deltmx=10
+  *boundary, amplitude=FAISAL_DISPLACEMENTAMP
+  *boundary, amplitude=FAISAL_DISPLACEMENTAMP
+  *endstep
+
+
+
+                            P R O B L E M   S I Z E
+
+
+          NUMBER OF ELEMENTS IS                                   343
+          NUMBER OF NODES IS                                      512
+          NUMBER OF NODES DEFINED BY THE USER                     512
+          TOTAL NUMBER OF VARIABLES IN THE MODEL                 2048
+          (DEGREES OF FREEDOM PLUS MAX NO. OF ANY LAGRANGE MULTIPLIER
+           VARIABLES. INCLUDE *PRINT,SOLVE=YES TO GET THE ACTUAL NUMBER.)
+
+
+
+
+
+          THE PROGRAM HAS DISCOVERED     1 FATAL ERRORS
+
+               ** EXECUTION IS TERMINATED **
+
+
+
+                              END OF USER INPUT PROCESSING
+
+
+
+     JOB TIME SUMMARY
+       USER TIME (SEC)      =     0.10    
+       SYSTEM TIME (SEC)    =     0.10    
+       TOTAL CPU TIME (SEC) =     0.20    
+       WALLCLOCK TIME (SEC) =            0
