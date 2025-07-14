@@ -1,0 +1,12 @@
+*start global
+*mode cure
+*units mm
+*ini phi 1e-20
+*ini temp 20
+*damage enable false
+*constitutive linear.elastic
+*end global
+*start material
+*name non_user
+*end material
+*eof
